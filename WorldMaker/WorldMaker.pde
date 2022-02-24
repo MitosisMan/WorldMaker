@@ -4,6 +4,7 @@ boolean up, down, left, right;
 float speed = 1;
 Obstacle[][] obs = new Obstacle[10000][10000];
 boolean redraw = true;
+PrintWriter output;
 
 void setup() {
   size(800, 600);
@@ -11,9 +12,6 @@ void setup() {
 }
 
 void draw() {
-  if (frameCount % 20 == 0)
-    println(frameRate);
-
   if (up) {
     redraw = true;
     changeY += speed;
@@ -30,18 +28,22 @@ void draw() {
     redraw = true;
     changeX += speed;
   }
-  
+
   if (mousePressed) {
     redraw = true;
     int x = -1*(int)changeX + (int)mouseX/50;
     int y = -1*(int)changeY + (int)mouseY/50;
-    obs[x + 5000][y + 5000] = (new Obstacle("pokemonTree", x, y));
+    obs[x + 5000][y + 5000] = (new Obstacle("pokemonTree", x, y, true));
   }
-  
-  
+
+
 
   if (redraw) {
     background(255);
+    
+    fill(200,100,100);
+    square(50*changeX,50*changeY,50);
+    
     fill(0);
     for (int x = -50; x < width; x += 50) {  //Longitude
       line(x + (50*changeX) % 50, 0, x + (50*changeX) % 50, height);
@@ -56,15 +58,16 @@ void draw() {
           obs[x][y].show();
       }
     }
+
+    fill(255);
+    rect(25, 25, 600, 100);
+    fill(0);
+    textSize(30);
+    text("UP and DOWN arrows to change speed", 45, 60);
+    text("Speed is " + speed, 45, 100);
+
     redraw = false;
   }
-
-  fill(255);
-  rect(25, 25, 600, 100);
-  fill(0);
-  textSize(30);
-  text("UP and DOWN arrows to change speed", 45, 60);
-  text("Speed is " + speed, 45, 100);
 }
 
 void keyPressed() {
@@ -79,6 +82,12 @@ void keyPressed() {
   }
   if (key == 'd' || key == 'D') {
     right = true;
+  }
+  if (key == 'o' || key == 'O') {
+    save();
+  }
+  if (key == 'p' || key == 'P') {
+    load();
   }
   if (key == CODED) {
     if (keyCode == UP) {
@@ -105,4 +114,40 @@ void keyReleased() {
   if (key == 'd' || key == 'D') {
     right = false;
   }
+}
+
+public void save() {
+  output = createWriter("pokemonWorld.txt");
+  for (Obstacle[] row : obs) {
+    for (Obstacle o : row) {
+      if (o != null)
+        output.println(o);
+    }
+  }
+  output.println();
+  output.flush();
+  output.close();
+  println("saved");
+}
+
+public void load() {
+  obs = new Obstacle[10000][10000];
+  BufferedReader reader = createReader("pokemonWorld.txt");
+  String line = null;
+  try {
+    while ((line = reader.readLine()) != null) {
+      String[] pieces = line.split(" ");
+      if (pieces.length > 1) {
+        String name = pieces[0];
+        int x = int(pieces[1]);
+        int y = int(pieces[2]);
+        obs[x+5000][y+5000] = new Obstacle(name, x, y, true);
+      }
+    }
+    reader.close();
+  } 
+  catch (IOException e) {
+  }
+  redraw = true;
+  println("loaded");
 }
