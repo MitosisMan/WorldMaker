@@ -5,6 +5,8 @@ float speed = 1;
 Obstacle[][] obs = new Obstacle[10000][10000];
 boolean redraw = true;
 PrintWriter output;
+String place = "pokemonTree";
+int route = 1;
 
 void setup() {
   size(800, 600);
@@ -33,17 +35,23 @@ void draw() {
     redraw = true;
     int x = -1*(int)changeX + (int)mouseX/50;
     int y = -1*(int)changeY + (int)mouseY/50;
-    obs[x + 5000][y + 5000] = (new Obstacle("pokemonTree", x, y, true));
+    if(!place.equals("Eraser")){
+      if(place.equals("pokemonTree"))
+        obs[x + 5000][y + 5000] = (new Obstacle(place, x, y));
+      else if(place.equals("Grass"))
+        obs[x + 5000][y + 5000] = (new Obstacle(place, x, y));
+    }else
+      obs[x + 5000][y + 5000] = null;
   }
 
 
 
   if (redraw) {
     background(255);
-    
-    fill(200,100,100);
-    square(50*changeX,50*changeY,50);
-    
+
+    fill(200, 100, 100);
+    square(50*changeX, 50*changeY, 50);
+
     fill(0);
     for (int x = -50; x < width; x += 50) {  //Longitude
       line(x + (50*changeX) % 50, 0, x + (50*changeX) % 50, height);
@@ -63,8 +71,16 @@ void draw() {
     rect(25, 25, 600, 100);
     fill(0);
     textSize(30);
-    text("UP and DOWN arrows to change speed", 45, 60);
-    text("Speed is " + speed, 45, 100);
+    textAlign(LEFT);
+    text("Route: " + route, 45, 60);
+
+    fill(255);
+    rect(width-135, 25, 110, 100);
+    fill(0);
+    textSize(15);
+    textAlign(CENTER);
+    text("<-   ->", width-80, 60);
+    text("" + place, width - 80, 100);
 
     redraw = false;
   }
@@ -91,13 +107,31 @@ void keyPressed() {
   }
   if (key == CODED) {
     if (keyCode == UP) {
-      if (speed < 10)
-        speed += .5;
+      if (route > 1)
+        route--;
     }
     if (keyCode == DOWN) {
-      if (speed > 0)
-        speed -= .5;
+      route++;
     }
+    if (keyCode == LEFT) {
+      if (place.equals("pokemonTree")) {
+        place = "Grass";
+      } else if (place.equals("Grass")) {
+        place =  "Eraser";
+      } else if (place.equals("Eraser")) {
+        place ="pokemonTree";
+      }
+    }
+    if (keyCode == RIGHT) {
+      if (place.equals("pokemonTree")) {
+        place = "Eraser";
+      } else if (place.equals("Grass")) {
+        place = "pokemonTree";
+      } else if(place.equals("Eraser")){
+        place = "Grass";
+      }
+    }
+    redraw = true;
   }
 }
 
@@ -117,7 +151,7 @@ void keyReleased() {
 }
 
 public void save() {
-  output = createWriter("pokemonWorld.txt");
+  output = createWriter("route" + route + ".txt");
   for (Obstacle[] row : obs) {
     for (Obstacle o : row) {
       if (o != null)
@@ -132,7 +166,7 @@ public void save() {
 
 public void load() {
   obs = new Obstacle[10000][10000];
-  BufferedReader reader = createReader("pokemonWorld.txt");
+  BufferedReader reader = createReader("route" + route + ".txt");
   String line = null;
   try {
     while ((line = reader.readLine()) != null) {
@@ -141,7 +175,7 @@ public void load() {
         String name = pieces[0];
         int x = int(pieces[1]);
         int y = int(pieces[2]);
-        obs[x+5000][y+5000] = new Obstacle(name, x, y, true);
+        obs[x+5000][y+5000] = new Obstacle(name, x, y);
       }
     }
     reader.close();
